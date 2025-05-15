@@ -1,0 +1,1504 @@
+<!--
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>titans-Collide</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600&display=swap" rel="stylesheet">
+    <style>
+        body { 
+            margin: 0;
+            background-color: black;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            position: relative; /* For absolute positioning of menu */
+        }
+
+        svg {
+            width: 90vh;
+            height: 90vh;
+        }
+
+        polygon {
+            fill: none;
+            stroke-width: 2;
+        }
+
+        circle { 
+            cursor: pointer; 
+        }
+
+        text {
+            fill: white;
+            font-size: .3rem;
+            font-weight: 800;
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+            text-anchor: middle;
+            dominant-baseline: middle;
+            pointer-events: none; /* makes sure middletoouteruse clicks pass through */
+        }
+        #timers {
+            position: absolute;
+            right: 2rem;
+            top: 2rem;
+            color: white;
+            font-family: sans-serif;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            z-index: 10;
+        }
+
+        .timer-block {
+            text-align: center;
+            background: linear-gradient(145deg, #1c1c1c, #2a2a2a);
+            padding: 1rem;
+            border-radius: 1rem;
+            box-shadow: 0 0 15px rgba(255, 255, 255, 0.1);
+            border: 2px solid #444;
+            font-family: 'Orbitron', sans-serif;
+            color: #00ffff;
+        }
+        .player-name {
+            font-size: 1.1rem;
+            font-weight: bold;
+            margin-bottom: 0.3rem;
+            text-shadow: 0 0 5px cyan;
+        }
+
+        #timer1, #timer2 {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #b3ff00;
+            text-shadow: 0 0 10px #b3ff00, 0 0 5px #000;
+            font-family: 'Orbitron', sans-serif;
+        }
+
+        line {
+            stroke: white;
+            stroke-width: 2;
+        }
+        #moveTimer {
+            position: relative;
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: radial-gradient(circle at center, #333 50%, #222);
+            color: hotpink;
+            font-size: 2rem;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 0 15px hotpink, 0 0 5px #000 inset;
+            transition: all 0.3s ease;
+            border: 4px solid hotpink;
+        }
+        .disabled-circle {
+            opacity: 0.3;
+            cursor: not-allowed;
+            transition: opacity 0.3s ease;
+        } 
+        #scores {
+            margin-top: 1rem;
+            color: white;
+            font-size: 1rem;
+            text-align: center;
+            font-family: 'Orbitron', sans-serif;
+        }
+
+        #gameOverScreen {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100vw; height: 100vh;
+            background-color: rgba(0,0,0,0.85);
+            color: white;
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            font-family: 'Orbitron', sans-serif;
+            z-index: 100;
+        }
+
+        #gameOverScreen h1 {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+
+        #gameOverScreen p {
+            font-size: 1.5rem;
+            margin: 0.5rem 0;
+        }
+
+        /* Menu Styles */
+        #gameMenu {
+            position: absolute;
+            left: 2rem;
+            top: 2rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            z-index: 10;
+        }
+
+        .menu-button {
+            background: linear-gradient(145deg, #1c1c1c, #2a2a2a);
+            border: 2px solid #444;
+            border-radius: 0.5rem;
+            padding: 0.5rem 1rem;
+            color: #00ffff;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1rem;
+            font-weight: 600;
+            text-shadow: 0 0 5px cyan;
+            cursor: pointer;
+            box-shadow: 0 0 10px rgba(255, 255, 255, 0.1);
+            transition: all 0.3s ease;
+        }
+
+        .menu-button:hover {
+            background: linear-gradient(145deg, #2a2a2a, #3a3a3a);
+            box-shadow: 0 0 15px rgba(0, 255, 255, 0.3);
+            color: #b3ff00;
+            text-shadow: 0 0 10px #b3ff00;
+        }
+
+        .menu-button:active {
+            background: linear-gradient(145deg, #3a3a3a, #2a2a2a);
+            box-shadow: 0 0 5px rgba(0, 255, 255, 0.1);
+        }
+    </style>
+</head>
+
+<body>
+    
+    <div id="gameMenu">
+        <button id="resetButton" class="menu-button">Reset</button>
+        <button id="pauseButton" class="menu-button">Pause</button>
+        <button id="resumeButton" class="menu-button">Resume</button>
+    </div>
+
+    <div id="timers">
+        <div id="scores">
+            <div>Player 1 Score: <span id="score1">0</span></div>
+            <div>Player 2 Score: <span id="score2">0</span></div>
+        </div>         
+        <div id="moveTimer">10</div>
+        <div class="timer-block">
+            <div class="player-name">Player 1</div>
+            <div id="timer1">90</div>
+        </div>
+        <div class="timer-block">
+            <div class="player-name">Player 2</div>
+            <div id="timer2">90</div>
+        </div>
+    </div>
+    <div id="gameOverScreen">
+        <h1>Game Over</h1>
+        <p id="finalWinnerText"></p>
+        <p id="finalScoreText"></p>
+        <button id="startNewGameButton" class="menu-button">Start a New Game</button>
+    </div>    
+    <svg viewBox="0 -10 180 180" id="hexSvg">
+        <polygon points="100,40 135,60 135,100 100,120 65,100 65,60" stroke="#FFFFFF" />
+        <polygon points="100,20 155,50 155,110 100,140 45,110 45,50" stroke="#9C51B6" />
+        <polygon points="100,0 175,40 175,120 100,160 25,120 25,40" stroke="#FF007F" />
+    </svg>  
+
+    <script>
+        const svg = document.getElementById("hexSvg");
+        let circleCounter = 0;
+        let currentPlayer = 1; // Track the current player (1 or 2)
+        let p1Time = 90;
+        let p2Time = 90;
+        let timer1Interval, timer2Interval;
+        let clickTimeLeft = 10; // 10 seconds per click
+        let clickTimerInterval;
+        let lastClickTime = null;
+        let middleUnlockedOnce = false;
+        let innerUnlockedOnce = false;
+        let score1 = 0;
+        let score2 = 0;
+        const circleAdjacency = {};  // circleID -> array of {neighborID, label}
+        let isPaused = false; // Track pause state
+
+        // Start Player 1's timer on page load
+        window.onload = () => {
+            startTimer(1);
+            startClickTimer(); 
+            setupMenuButtons();
+        };
+
+        function updateMoveTimerDisplay() {
+            document.getElementById('moveTimer').textContent = clickTimeLeft;
+        }
+        function startTimer(player) {
+            clearInterval(timer1Interval);
+            clearInterval(timer2Interval);
+
+            if (player === 1) {
+                timer1Interval = setInterval(() => {
+                    if (isPaused) return; // Skip if paused
+                    if (p1Time > 0) {
+                        p1Time--;
+                        document.getElementById('timer1').textContent = p1Time;
+                    } else {
+                        clearInterval(timer1Interval);
+                        clearInterval(clickTimerInterval);
+                        alert("Player 1 ran out of time!");
+                        endGame();
+                    }
+                }, 1000);
+            } else {
+                timer2Interval = setInterval(() => {
+                    if (isPaused) return; // Skip if paused
+                    if (p2Time > 0) {
+                        p2Time--;
+                        document.getElementById('timer2').textContent = p2Time;
+                    } else {
+                        clearInterval(timer2Interval);
+                        clearInterval(clickTimerInterval);
+                        alert("Player 2 ran out of time!");
+                        endGame();
+                    }
+                }, 1000);
+            }
+        }
+        function startClickTimer() {
+            clearInterval(clickTimerInterval);
+            clickTimeLeft = 10;
+            updateMoveTimerDisplay(); 
+
+            clickTimerInterval = setInterval(() => {
+                if (isPaused) return; // Skip if paused
+                if (clickTimeLeft > 0) {
+                    clickTimeLeft--;
+                    updateMoveTimerDisplay();
+                } else {
+                    clearInterval(clickTimerInterval);
+                    currentPlayer = currentPlayer === 1 ? 2 : 1;
+                    alert(`Move time's up! Player ${currentPlayer}'s turn.`);
+                    startTimer(currentPlayer);
+                    startClickTimer();
+                }
+            }, 1000);
+        } 
+
+        // Retrieve player colors from localStorage or set default colors
+        const p1rgb = localStorage.getItem("p1c") || "rgb(255, 0, 0)"; // Default to red if not found
+        const p2rgb = localStorage.getItem("p2c") || "rgb(0, 0, 255)"; // Default to blue if not found
+        const p1ColoredCircles = [];
+        const p2ColoredCircles = [];
+
+        console.log("Player 1 Color (RGB):", p1rgb);
+        console.log("Player 2 Color (RGB):", p2rgb);
+        const points = {
+            inner: [
+                [100, 40], [135, 60], [135, 100], [100, 120], [65, 100], [65, 60]
+            ],
+            middle: [
+                [100, 20], [155, 50], [155, 110], [100, 140], [45, 110], [45, 50]
+            ],
+            outer: [
+                [100, 0], [175, 40], [175, 120], [100, 160], [25, 120], [25, 40]
+            ]
+        };
+        function addLine(x1, y1, x2, y2) {
+            svg.insertAdjacentHTML('beforeend', `
+                <line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" />
+            `);
+        }
+        const innertomiddle = [0, 2, 4];
+        for (const i of innertomiddle) {
+            addLine(points.inner[i][0], points.inner[i][1], points.middle[i][0], points.middle[i][1]);
+        }
+
+        // Middle to Outer connections: Label the other 3 non-consecutive edges with "1"
+        const middletouter = [1, 3, 5];
+        for (const i of middletouter) {
+            addLine(points.middle[i][0], points.middle[i][1], points.outer[i][0], points.outer[i][1]);
+        }
+        let allowedZone = 'outer';  // start with outer hexagon
+
+        function circledim() {
+            const allCircles = svg.querySelectorAll('circle');
+            allCircles.forEach(circle => {
+                const zone = circle.getAttribute('data-zone');
+
+                // Unlock logic based on allowedZone
+                if (
+                    allowedZone === 'outer' && zone === 'outer' ||
+                    allowedZone === 'middle' && (zone === 'outer' || zone === 'middle') ||
+                    allowedZone === 'inner' // All zones unlocked
+                ) {
+                    circle.classList.remove('disabled-circle');
+                } else {
+                    circle.classList.add('disabled-circle');
+                }
+            });
+        }
+        function checkIfAllFilled(zone) {
+            const zoneCircles = Array.from(svg.querySelectorAll(`circle[data-zone="${zone}"]`));
+            return zoneCircles.every(c => c.getAttribute('fill') !== 'darkgrey');
+        }
+
+        function updatedzone() {
+            const outerFilled = checkIfAllFilled('outer');
+            const middleFilled = checkIfAllFilled('middle');
+
+            // Once unlocked, remain unlocked
+            if (outerFilled && !middleUnlockedOnce) {
+                middleUnlockedOnce = true;
+            }
+            if (middleFilled && !innerUnlockedOnce) {
+                innerUnlockedOnce = true;
+            }
+
+            if (innerUnlockedOnce) {
+                allowedZone = 'inner'; // everything unlocked
+            } else if (middleUnlockedOnce) {
+                allowedZone = 'middle'; // middle + outer allowed
+            } else {
+                allowedZone = 'outer'; // only outer
+            }
+            // End game when all inner circles filled
+            if (checkIfAllFilled('inner')) {
+                clearInterval(timer1Interval);
+                clearInterval(timer2Interval);
+                clearInterval(clickTimerInterval);
+
+                let resultText = '';
+                if (score1 > score2) resultText = 'Player 1 Wins!';
+                else if (score2 > score1) resultText = 'Player 2 Wins!';
+                else resultText = "It's a Tie!";
+
+                document.getElementById('finalWinnerText').textContent = resultText;
+                document.getElementById('finalScoreText').textContent = `P1: ${score1} | P2: ${score2}`;
+                document.getElementById('gameOverScreen').style.display = 'flex';
+            }
+            circledim(); // update visual dimming
+        }
+
+        function Circle(x, y, zone) {
+            const circleId = `circle-${circleCounter++}`;
+            svg.insertAdjacentHTML('beforeend', `
+                <circle id="${circleId}" cx="${x}" cy="${y}" r="4" fill="darkgrey" data-zone="${zone}" />
+            `);
+            const circle = document.getElementById(circleId);
+            circle.addEventListener('click', function () {
+                if (isPaused) return; // Ignore clicks while paused
+                const currentColor = circle.getAttribute('fill');
+                const circleZone = circle.getAttribute('data-zone');
+
+                if (currentColor !== 'darkgrey') return; // Already filled
+                if (
+                    (allowedZone === 'outer' && circleZone !== 'outer') ||
+                    (allowedZone === 'middle' && !['outer', 'middle'].includes(circleZone)) ||
+                    (allowedZone === 'inner' && !['outer', 'middle', 'inner'].includes(circleZone))
+                ) { 
+                    return; // Click ignored silently
+                }
+
+                let playerQueue = currentPlayer === 1 ? p1ColoredCircles : p2ColoredCircles;
+
+                // Revert the oldest circle if the queue is full
+                if (playerQueue.length >= 4) {
+                    const oldestCircleId = playerQueue.shift();
+                    const oldestCircle = document.getElementById(oldestCircleId);
+                    if (oldestCircle) {
+                        console.log(`Reverting circle ${oldestCircleId} to darkgrey for Player ${currentPlayer}`);
+                        oldestCircle.setAttribute('fill', 'darkgrey');
+                        updateScores(); // Update scores after reverting to reflect the loss of points
+                    }
+                }
+
+                const newColor = currentPlayer === 1 ? p1rgb : p2rgb;
+                circle.setAttribute('fill', newColor);
+                playerQueue.push(circle.id);
+                console.log(`Player ${currentPlayer} colored circle ${circleId}`);
+                updateScores(); // Calculate score after coloring the new circle
+
+                updatedzone();
+
+                // Game End Check
+                if (checkIfAllFilled('inner')) {
+                    endGame();
+                    return;
+                }
+
+                currentPlayer = currentPlayer === 1 ? 2 : 1;
+                clearInterval(timer1Interval);
+                clearInterval(timer2Interval);
+                clearInterval(clickTimerInterval);
+                startTimer(currentPlayer);
+                startClickTimer();
+            });
+        }
+
+        function drawAllCircles() {
+            for (const [zone, group] of Object.entries(points)) {
+                group.forEach(([x, y]) => {
+                    Circle(x, y, zone);
+                });
+            }
+
+            function mapAdjacency() {
+                // Define edges and their corresponding labels
+                const edgesWithLabels = [
+                    // Inner ring
+                    { pair: ['circle-0', 'circle-1'], label: 9 },
+                    { pair: ['circle-1', 'circle-2'], label: 8 },
+                    { pair: ['circle-2', 'circle-3'], label: 8 },
+                    { pair: ['circle-3', 'circle-4'], label: 9},
+                    { pair: ['circle-4', 'circle-5'], label: 8 },
+                    { pair: ['circle-5', 'circle-0'], label: 8},
+                    // Middle ring
+                    { pair: ['circle-6', 'circle-7'], label: 4 },
+                    { pair: ['circle-7', 'circle-8'], label: 5 },
+                    { pair: ['circle-8', 'circle-9'], label: 6 },
+                    { pair: ['circle-9', 'circle-10'], label: 4 },
+                    { pair: ['circle-10', 'circle-11'], label: 5 },
+                    { pair: ['circle-11', 'circle-6'], label: 6 },
+                    // Outer ring
+                    { pair: ['circle-12', 'circle-13'], label: 1 },
+                    { pair: ['circle-13', 'circle-14'], label: 2 },
+                    { pair: ['circle-14', 'circle-15'], label: 1 },
+                    { pair: ['circle-15', 'circle-16'], label: 1 },
+                    { pair: ['circle-16', 'circle-17'], label: 3 },
+                    { pair: ['circle-17', 'circle-12'], label: 2 },
+                    // Inner to Middle connectors
+                    { pair: ['circle-0', 'circle-6'], label: 1 },
+                    { pair: ['circle-2', 'circle-8'], label: 1 },
+                    { pair: ['circle-4', 'circle-10'], label: 1 },
+                    // Middle to Outer connectors
+                    { pair: ['circle-7', 'circle-13'], label: 1 },
+                    { pair: ['circle-9', 'circle-15'], label: 1 },
+                    { pair: ['circle-11', 'circle-17'], label: 1 }
+                ];
+
+                // Build the adjacency map
+                const allCircles = Array.from(svg.querySelectorAll('circle'));
+                allCircles.forEach(c1 => {
+                    const id1 = c1.id;
+                    circleAdjacency[id1] = [];
+
+                    edgesWithLabels.forEach(edge => {
+                        const [idA, idB] = edge.pair;
+                        if (id1 === idA) {
+                            circleAdjacency[id1].push({ neighborID: idB, label: edge.label });
+                        } else if (id1 === idB) {
+                            circleAdjacency[id1].push({ neighborID: idA, label: edge.label });
+                        }
+                    });
+                });
+            }
+
+            mapAdjacency(); // Call it after circles are drawn
+            circledim();
+        }
+
+        drawAllCircles(); // Draw all circles when page loads
+
+        function endGame() {
+            clearInterval(timer1Interval);
+            clearInterval(timer2Interval);
+            clearInterval(clickTimerInterval);
+
+            let resultText = '';
+            if (score1 > score2) resultText = 'Player 1 Wins!';
+            else if (score2 > score1) resultText = 'Player 2 Wins!';
+            else resultText = "It's a Tie!";
+
+            document.getElementById('finalWinnerText').textContent = resultText;
+            document.getElementById('finalScoreText').textContent = `P1: ${score1} | P2: ${score2}`;
+            document.getElementById('gameOverScreen').style.display = 'flex';
+        }
+
+        // Optional: Example midpoint label
+        function aText(x1, y1, x2, y2, label) {
+            const midX = (x1 + x2) / 2;
+            const midY = (y1 + y2) / 2;
+
+            const dx = x2 - x1;
+            const dy = y2 - y1;
+
+            const length = Math.sqrt(dx * dx + dy * dy);
+            const offsetX = -dy / length;
+            const offsetY = dx / length;
+
+            const shiftAmiddletoouterunt = 3; 
+            const textX = midX + offsetX * shiftAmiddletoouterunt;
+            const textY = midY + offsetY * shiftAmiddletoouterunt;
+
+            svg.insertAdjacentHTML('beforeend', `
+                <text x="${textX}" y="${textY}" font-size=".3rem">${label}</text>
+            `);
+        }
+
+        // Inner hexagon edges
+        aText(points.inner[0][0], points.inner[0][1], points.inner[1][0], points.inner[1][1], "9");
+        aText(points.inner[1][0], points.inner[1][1], points.inner[2][0], points.inner[2][1], "8");
+        aText(points.inner[2][0], points.inner[2][1], points.inner[3][0], points.inner[3][1], "8");
+        aText(points.inner[3][0], points.inner[3][1], points.inner[4][0], points.inner[4][1], "9");
+        aText(points.inner[4][0], points.inner[4][1], points.inner[5][0], points.inner[5][1], "8");
+        aText(points.inner[5][0], points.inner[5][1], points.inner[0][0], points.inner[0][1], "8");
+
+        // Middle hexagon edges
+        aText(points.middle[0][0], points.middle[0][1], points.middle[1][0], points.middle[1][1], "4");
+        aText(points.middle[1][0], points.middle[1][1], points.middle[2][0], points.middle[2][1], "5");
+        aText(points.middle[2][0], points.middle[2][1], points.middle[3][0], points.middle[3][1], "6");
+        aText(points.middle[3][0], points.middle[3][1], points.middle[4][0], points.middle[4][1], "4");
+        aText(points.middle[4][0], points.middle[4][1], points.middle[5][0], points.middle[5][1], "5");
+        aText(points.middle[5][0], points.middle[5][1], points.middle[0][0], points.middle[0][1], "6");
+
+        // Outer hexagon edges  
+        aText(points.outer[0][0], points.outer[0][1], points.outer[1][0], points.outer[1][1], "2");
+        aText(points.outer[1][0], points.outer[1][1], points.outer[2][0], points.outer[2][1], "1");
+        aText(points.outer[2][0], points.outer[2][1], points.outer[3][0], points.outer[3][1], "1");
+        aText(points.outer[3][0], points.outer[3][1], points.outer[4][0], points.outer[4][1], "3");
+        aText(points.outer[4][0], points.outer[4][1], points.outer[5][0], points.outer[5][1], "2");
+        aText(points.outer[5][0], points.outer[5][1], points.outer[0][0], points.outer[0][1], "1"); 
+
+        // Inner to Middle connections: Label only 3 non-consecutive edges with "1"
+        const inner_middle = [0, 2, 4];
+        for (const i of inner_middle) {
+            aText(points.inner[i][0], points.inner[i][1], points.middle[i][0], points.middle[i][1], "1");
+        }
+
+        // Middle to Outer connections: Label the other 3 non-consecutive edges with "1"
+        const middle_outer = [1, 3, 5];
+        for (const i of middle_outer) {
+            aText(points.middle[i][0], points.middle[i][1], points.outer[i][0], points.outer[i][1], "1");
+        } 
+
+        function updateScores() {
+            let counted = new Set();
+            score1 = 0;
+            score2 = 0; 
+
+            for (const id in circleAdjacency) {
+                const circle = document.getElementById(id);
+                const color = circle.getAttribute('fill');
+                if (color === 'darkgrey') continue;
+
+                for (const { neighborID, label } of circleAdjacency[id]) {
+                    const neighbor = document.getElementById(neighborID);
+                    if (neighbor && neighbor.getAttribute('fill') === color) {
+                        const pairKey = [id, neighborID].sort().join('-');
+                        if (!counted.has(pairKey)) {
+                            counted.add(pairKey);
+                            const points = label; // Use the label value as the score
+                            if (color === p1rgb) {
+                                score1 += points;
+                                console.log(`Player 1 scored ${points} for edge ${id} to ${neighborID}`);
+                            } else if (color === p2rgb) {
+                                score2 += points;
+                                console.log(`Player 2 scored ${points} for edge ${id} to ${neighborID}`);
+                            }
+                        }
+                    }
+                }
+            }
+
+            console.log(`Updated scores - Player 1: ${score1}, Player 2: ${score2}`);
+            document.getElementById('score1').textContent = score1;
+            document.getElementById('score2').textContent = score2;
+        }
+
+        // Menu Functionality
+        function setupMenuButtons() {
+            document.getElementById('resetButton').addEventListener('click', resetGame);
+            document.getElementById('pauseButton').addEventListener('click', pauseGame);
+            document.getElementById('resumeButton').addEventListener('click', resumeGame);
+            document.getElementById('startNewGameButton').addEventListener('click', resetGame);
+        }
+
+        function resetGame() {
+            // Clear all timers
+            clearInterval(timer1Interval);
+            clearInterval(timer2Interval);
+            clearInterval(clickTimerInterval);
+
+            // Reset game state
+            currentPlayer = 1;
+            p1Time = 90;
+            p2Time = 90;
+            clickTimeLeft = 10;
+            middleUnlockedOnce = false;
+            innerUnlockedOnce = false;
+            allowedZone = 'outer';
+            score1 = 0;
+            score2 = 0;
+            p1ColoredCircles.length = 0;
+            p2ColoredCircles.length = 0;
+            isPaused = false;
+
+            // Reset timers display
+            document.getElementById('timer1').textContent = p1Time;
+            document.getElementById('timer2').textContent = p2Time;
+            document.getElementById('moveTimer').textContent = clickTimeLeft;
+            document.getElementById('score1').textContent = score1;
+            document.getElementById('score2').textContent = score2;
+
+            // Reset circles to darkgrey
+            const allCircles = svg.querySelectorAll('circle');
+            allCircles.forEach(circle => {
+                circle.setAttribute('fill', 'darkgrey');
+            });
+
+            // Hide game over screen if visible
+            document.getElementById('gameOverScreen').style.display = 'none';
+
+            // Restart timers
+            startTimer(currentPlayer);
+            startClickTimer();
+            circledim();
+        }
+
+        function pauseGame() {
+            if (!isPaused) { 
+                isPaused = true;
+                alert('Game paused');
+            }
+        }
+
+        function resumeGame() {
+            if (isPaused) {
+                isPaused = false;
+                alert('Game resumed');
+            }
+        }
+    </script> 
+</body>
+</html>-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TITANS-COLLIDE</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600&display=swap" rel="stylesheet">
+    <style>
+        body { 
+            margin: 0;
+            background-color: black;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            position: relative;
+            overflow: hidden;
+        }
+
+        svg {
+            width: 90vmin;
+            height: 90vmin;
+            max-width: 100%;
+            max-height: 100%;
+        }
+
+        polygon {
+            fill: none;
+            stroke-width: 0.4vmin;
+        }
+
+        circle { 
+            cursor: pointer;
+        }
+
+        text {
+            fill: white;
+            font-size: 1vmin;
+            font-weight: 800;
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+            text-anchor: middle;
+            dominant-baseline: middle;
+            pointer-events: none;
+        }
+
+        #timers {
+            position: absolute;
+            right: 2vmin;
+            top: 2vmin;
+            color: white;
+            font-family: sans-serif;
+            display: flex;
+            flex-direction: column;
+            gap: 2vmin;
+            z-index: 10;
+        }
+
+        .timer-block {
+            text-align: center;
+            background: linear-gradient(145deg, #1c1c1c, #2a2a2a);
+            padding: 2vmin;
+            border-radius: 1.5vmin;
+            box-shadow: 0 0 1.5vmin rgba(255, 255, 255, 0.1);
+            border: 0.4vmin solid #444;
+            font-family: 'Orbitron', sans-serif;
+            color: #00ffff;
+        }
+
+        .player-name {
+            font-size: 2vmin;
+            font-weight: bold;
+            margin-bottom: 1vmin;
+            text-shadow: 0 0 1vmin cyan;
+        }
+
+        #timer1, #timer2 {
+            font-size: 3vmin;
+            font-weight: 700;
+            color: #b3ff00;
+            text-shadow: 0 0 1vmin #b3ff00, 0 0 0.5vmin #000;
+            font-family: 'Orbitron', sans-serif;
+        }
+
+        line {
+            stroke: white;
+            stroke-width: 0.3vmin;
+        }
+
+        #moveTimer {
+            position: relative; 
+            width: 12vmin;
+            height: 12vmin;
+            border-radius: 50%;
+            background: radial-gradient(circle at center, #333 50%, #222);
+            color: hotpink;
+            font-size: 3vmin;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 0 2vmin hotpink, 0 0 0.5vmin #000 inset;
+            transition: all 0.3s ease;
+            border: 0.6vmin solid hotpink;
+        }
+
+        .disabled-titan {
+            opacity: 0.3;
+            cursor: not-allowed;
+            transition: opacity 0.3s ease;
+        }
+
+        #scores {
+            color: white;
+            font-size: 2vmin;
+            text-align: center;
+            font-family: 'Orbitron', sans-serif;
+        }
+
+        #gameOverScreen {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100vw; height: 100vh;
+            background-color: rgba(0,0,0,0.85);
+            color: white;
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            font-family: 'Orbitron', sans-serif;
+            z-index: 100;
+            text-align: center;
+            padding: 2vmin;
+        }
+
+        #gameOverScreen h1 {
+            font-size: 6vmin;
+            margin-bottom: 2vmin;
+        }
+
+        #gameOverScreen p {
+            font-size: 3vmin;
+            margin: 1vmin 0;
+        }
+
+        #gameMenu {
+            position: absolute;
+            left: 2vmin;
+            top: 2vmin;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5vmin;
+            z-index: 10;
+        }
+
+        .menu-button {
+            background: linear-gradient(145deg, #1c1c1c, #2a2a2a);
+            border: 0.4vmin solid #444;
+            border-radius: 1vmin;
+            padding: 1vmin 2vmin;
+            color: #00ffff;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 2vmin;
+            font-weight: 600;
+            text-shadow: 0 0 0.5vmin cyan;
+            cursor: pointer;
+            box-shadow: 0 0 1vmin rgba(255, 255, 255, 0.1);
+            transition: all 0.3s ease;
+        }
+
+        .menu-button:hover {
+            background: linear-gradient(145deg, #2a2a2a, #3a3a3a);
+            box-shadow: 0 0 1.5vmin rgba(0, 255, 255, 0.3);
+            color: #b3ff00;
+            text-shadow: 0 0 1vmin #b3ff00;
+        }
+
+        .menu-button:active {
+            background: linear-gradient(145deg, #3a3a3a, #2a2a2a);
+            box-shadow: 0 0 0.5vmin rgba(0, 255, 255, 0.1);
+        }
+
+        .paused {
+            opacity: 0.3;
+            transition: opacity 0.3s ease;
+        }
+
+        #gameMenu .menu-button {
+            opacity: 1;
+        }
+
+        .selected-titan {
+            stroke: yellow;
+            stroke-width: 0.4vmin;
+            transition: stroke 0.3s ease;
+        }
+
+    </style>
+</head>
+
+<body>
+    <!-- Add Game Menu -->
+    <div id="gameMenu">
+        <button id="resetButton" class="menu-button">Reset</button>
+        <button id="pauseButton" class="menu-button">Pause</button>
+        <button id="resumeButton" class="menu-button">Resume</button>
+    </div>
+
+    <div id="timers">
+        <div id="scores">
+            <div>Player 1 Score: <span id="score1">0</span></div>
+            <div>Player 2 Score: <span id="score2">0</span></div>
+        </div>         
+        <div id="moveTimer">10</div>
+        <div class="timer-block">
+            <div class="player-name">Player 1</div>
+            <div id="timer1">90</div>
+        </div>
+        <div class="timer-block">
+            <div class="player-name">Player 2</div>
+            <div id="timer2">90</div>
+        </div>
+    </div>
+    <div id="gameOverScreen">
+        <h1>Game Over</h1>
+        <p id="finalWinnerText"></p>
+        <p id="finalScoreText"></p>
+        <button id="startNewGameButton" class="menu-button">Start a New Game</button>
+    </div>    
+    <svg viewBox="0 -10 180 180" id="hexSvg">
+        <polygon points="100,40 135,60 135,100 100,120 65,100 65,60" stroke="#FFFFFF" />
+        <polygon points="100,20 155,50 155,110 100,140 45,110 45,50" stroke="#9C51B6" />
+        <polygon points="100,0 175,40 175,120 100,160 25,120 25,40" stroke="#FF007F" />
+    </svg>  
+
+    <script>
+        const svg = document.getElementById("hexSvg");
+        let titanCounter = 0;
+        let currentPlayer = 1; // Track the current player (1 or 2)
+        let p1Time = 90;
+        let p2Time = 90;
+        let timer1Interval, timer2Interval;
+        let clickTimeLeft = 10; // 10 seconds per click
+        let clickTimerInterval;
+        let middleUnlockedOnce = false;
+        let innerUnlockedOnce = false;
+        let score1 = 0;
+        let score2 = 0;
+        const titanAdjacency = {}; // titanID -> array of {neighborID, label}
+        let isPaused = false; // Track pause state
+        let isMovementPhase = false; // Track if we're in placement or movement phase
+        let selectedtitan = null; // Track the currently selected titan for movement
+        const p1titans = []; // List of Player 1's titans (max 4)
+        const p2titans = []; // List of Player 2's titans (max 4)
+
+        // Start Player 1's timer on page load
+        window.onload = () => {
+            startTimer(1);
+            startClickTimer(); 
+            setupMenuButtons();
+        };
+
+        function updateMoveTimerDisplay() {
+            document.getElementById('moveTimer').textContent = clickTimeLeft;
+        }
+        function startTimer(player) {
+            clearInterval(timer1Interval);
+            clearInterval(timer2Interval);
+
+            if (player === 1) {
+                timer1Interval = setInterval(() => {
+                    if (isPaused) return; // Skip if paused
+                    if (p1Time > 0) {
+                        p1Time--;
+                        document.getElementById('timer1').textContent = p1Time;
+                    } else {
+                        clearInterval(timer1Interval);
+                        clearInterval(clickTimerInterval);
+                        alert("Player 1 ran out of time!");
+                        endGame();
+                    }
+                }, 1000);
+            } else {
+                timer2Interval = setInterval(() => {
+                    if (isPaused) return; // Skip if paused
+                    if (p2Time > 0) {
+                        p2Time--;
+                        document.getElementById('timer2').textContent = p2Time;
+                    } else {
+                        clearInterval(timer2Interval);
+                        clearInterval(clickTimerInterval);
+                        alert("Player 2 ran out of time!");
+                        endGame();
+                    }
+                }, 1000);
+            }
+        }
+        function startClickTimer() {
+            clearInterval(clickTimerInterval);
+            clickTimeLeft = 10;
+            updateMoveTimerDisplay(); 
+
+            clickTimerInterval = setInterval(() => {
+                if (isPaused) return; // Skip if paused
+                if (clickTimeLeft > 0) {
+                    clickTimeLeft--;
+                    updateMoveTimerDisplay();
+                } else {
+                    clearInterval(clickTimerInterval);
+                    currentPlayer = currentPlayer === 1 ? 2 : 1;
+                    alert(`Move time's up! Player ${currentPlayer}'s turn.`);
+                    startTimer(currentPlayer);
+                    startClickTimer();
+                }
+            }, 1000);
+        } 
+
+        // Retrieve player colors from localStorage or set default colors
+        const p1rgb = localStorage.getItem("p1c") || "rgb(255, 0, 0)"; // Default to red if not found
+        const p2rgb = localStorage.getItem("p2c") || "rgb(0, 0, 255)"; // Default to blue if not found
+
+        console.log("Player 1 Color (RGB):", p1rgb);
+        console.log("Player 2 Color (RGB):", p2rgb);
+        const points = {
+            inner: [
+                [100, 40], [135, 60], [135, 100], [100, 120], [65, 100], [65, 60]
+            ],
+            middle: [
+                [100, 20], [155, 50], [155, 110], [100, 140], [45, 110], [45, 50]
+            ],
+            outer: [
+                [100, 0], [175, 40], [175, 120], [100, 160], [25, 120], [25, 40]
+            ]
+        };
+        function addLine(x1, y1, x2, y2) {
+            svg.insertAdjacentHTML('beforeend', `
+                <line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" />
+            `);
+        }
+        const innertomiddle = [0, 2, 4];
+        for (const i of innertomiddle) {
+            addLine(points.inner[i][0], points.inner[i][1], points.middle[i][0], points.middle[i][1]);
+        }
+
+        // Middle to Outer connections: Label the other 3 non-consecutive edges with "1"
+        const middletouter = [1, 3, 5];
+        for (const i of middletouter) {
+            addLine(points.middle[i][0], points.middle[i][1], points.outer[i][0], points.outer[i][1]);
+        }
+        let allowedZone = 'outer'; // Start with outer hexagon
+
+        function titanDim() {
+            const alltitans = svg.querySelectorAll('circle');
+            alltitans.forEach(titan => {
+                const zone = titan.getAttribute('data-zone');
+
+                // Unlock logic based on allowedZone
+                if (
+                    allowedZone === 'outer' && zone === 'outer' ||
+                    allowedZone === 'middle' && (zone === 'outer' || zone === 'middle') ||
+                    allowedZone === 'inner' // All zones unlocked
+                ) {
+                    titan.classList.remove('disabled-titan');
+                } else {
+                    titan.classList.add('disabled-titan');
+                }
+            });
+        }
+        function checkIfAllFilled(zone) {
+            const zonetitans = Array.from(svg.querySelectorAll(`circle[data-zone="${zone}"]`));
+            return zonetitans.every(t => t.getAttribute('fill') !== 'darkgrey');
+        }
+
+        function updateZone() {
+            const outerFilled = checkIfAllFilled('outer');
+            const middleFilled = checkIfAllFilled('middle');
+
+            // Once unlocked, remain unlocked
+            if (outerFilled && !middleUnlockedOnce) {
+                middleUnlockedOnce = true;
+            }
+            if (middleFilled && !innerUnlockedOnce) {
+                innerUnlockedOnce = true;
+            }
+
+            if (innerUnlockedOnce) {
+                allowedZone = 'inner'; // Everything unlocked
+            } else if (middleUnlockedOnce) {
+                allowedZone = 'middle'; // Middle + outer allowed
+            } else {
+                allowedZone = 'outer'; // Only outer
+            }
+            // End game when all inner titans are placed
+            if (checkIfAllFilled('inner')) {
+                clearInterval(timer1Interval);
+                clearInterval(timer2Interval);
+                clearInterval(clickTimerInterval);
+
+                let resultText = '';
+                if (score1 > score2) resultText = 'Player 1 Wins!';
+                else if (score2 > score1) resultText = 'Player 2 Wins!';
+                else resultText = "It's a Tie!";
+
+                document.getElementById('finalWinnerText').textContent = resultText;
+                document.getElementById('finalScoreText').textContent = `P1: ${score1} | P2: ${score2}`;
+                document.getElementById('gameOverScreen').style.display = 'flex';
+            }
+            titanDim(); // Update visual dimming
+        }
+
+        function titan(x, y, zone) {
+            const titanId = `titan-${titanCounter++}`;
+            svg.insertAdjacentHTML('beforeend', `
+                <circle id="${titanId}" cx="${x}" cy="${y}" r="4" fill="darkgrey" data-zone="${zone}" />
+            `);
+            const titan = document.getElementById(titanId);
+            titan.addEventListener('click', function () {
+                if (isPaused) return; // Ignore clicks while paused
+                const currentColor = titan.getAttribute('fill');
+                const titanZone = titan.getAttribute('data-zone');
+
+                // Check if the titan is in an allowed zone
+                if (
+                    (allowedZone === 'outer' && titanZone !== 'outer') ||
+                    (allowedZone === 'middle' && !['outer', 'middle'].includes(titanZone)) ||
+                    (allowedZone === 'inner' && !['outer', 'middle', 'inner'].includes(titanZone))
+                ) { 
+                    return; // Click ignored silently
+                }
+
+                let playertitans = currentPlayer === 1 ? p1titans : p2titans;
+                let playerColor = currentPlayer === 1 ? p1rgb : p2rgb;
+                let opponenttitans = currentPlayer === 1 ? p2titans : p1titans;
+                let opponentColor = currentPlayer === 1 ? p2rgb : p1rgb;
+
+                if (!isMovementPhase) {
+                    // Placement phase: Place a new titan
+                    if (currentColor !== 'darkgrey') return; // Already occupied
+                    if (playertitans.length >= 4) return; // Player already has 4 titans
+
+                    titan.setAttribute('fill', playerColor);
+                    playertitans.push(titanId);
+                    console.log(`Player ${currentPlayer} placed titan ${titanId}`);
+
+                    // Check if both players have placed all 4 titans
+                    if (p1titans.length === 4 && p2titans.length === 4) {
+                        isMovementPhase = true;
+                        console.log("All titans placed. Entering movement phase.");
+                    }
+                } else {
+                    // Movement phase
+                    if (selectedtitan) {
+                        // A titan is already selected, try to move it to this node
+                        const selectedtitanElement = document.getElementById(selectedtitan);
+                        const selectedtitanColor = selectedtitanElement.getAttribute('fill');
+
+                        if (currentColor !== 'darkgrey') {
+                            // Target node is occupied, deselect and return
+                            selectedtitanElement.classList.remove('selected-titan');
+                            selectedtitan = null;
+                            return;
+                        }
+
+                        // Check if the target node is adjacent to the selected titan
+                        const isAdjacent = titanAdjacency[selectedtitan].some(neighbor => neighbor.neighborID === titanId);
+                        if (!isAdjacent) {
+                            alert("You can only move to an adjacent node!");
+                            return;
+                        }
+
+                        // Move the titan
+                        selectedtitanElement.setAttribute('fill', 'darkgrey');
+                        titan.setAttribute('fill', selectedtitanColor);
+                        console.log(`Player ${currentPlayer} moved titan from ${selectedtitan} to ${titanId}`);
+
+                        // Update the player's titan list
+                        const index = playertitans.indexOf(selectedtitan);
+                        if (index !== -1) {
+                            playertitans[index] = titanId;
+                        }
+
+                        // Deselect the titan
+                        selectedtitanElement.classList.remove('selected-titan');
+                        selectedtitan = null;
+
+                        // Check for surrounded titans and remove them
+                        checkAndRemoveSurroundedtitans();
+
+                        // Check if a player has no titans left
+                        if (p1titans.length === 0) {
+                            endGameWithWinner(2);
+                            return;
+                        } else if (p2titans.length === 0) {
+                            endGameWithWinner(1);
+                            return;
+                        }
+                    } else {
+                        // No titan selected, check if this is the current player's titan
+                        if (currentColor !== playerColor) {
+                            alert("Select your own titan to move!");
+                            return;
+                        }
+
+                        // Select the titan
+                        selectedtitan = titanId;
+                        titan.classList.add('selected-titan');
+                        console.log(`Player ${currentPlayer} selected titan ${titanId}`);
+                        return; // Wait for the next click to move
+                    }
+                }
+
+                updateScores(); // Calculate score after placing or moving
+                updateZone();
+
+                // Game End Check
+                if (!isMovementPhase && checkIfAllFilled('inner')) {
+                    endGame();
+                    return;
+                }
+
+                currentPlayer = currentPlayer === 1 ? 2 : 1;
+                clearInterval(timer1Interval);
+                clearInterval(timer2Interval);
+                clearInterval(clickTimerInterval);
+                startTimer(currentPlayer);
+                startClickTimer();
+            });
+        }
+
+        function checkAndRemoveSurroundedtitans() {
+            let opponenttitans = currentPlayer === 1 ? p2titans : p1titans;
+            let playerColor = currentPlayer === 1 ? p1rgb : p2rgb;
+            let updatedOpponenttitans = [...opponenttitans];
+
+            opponenttitans.forEach(titanId => {
+                const titan = document.getElementById(titanId);
+                if (!titan) return; // titan might have been removed already
+
+                // Check if all adjacent nodes are occupied by the current player's titans
+                const neighbors = titanAdjacency[titanId];
+                const isSurrounded = neighbors.every(neighbor => {
+                    const neighbortitan = document.getElementById(neighbor.neighborID);
+                    return neighbortitan.getAttribute('fill') === playerColor;
+                });
+
+                if (isSurrounded) {
+                    console.log(`titan ${titanId} is surrounded and removed!`);
+                    titan.setAttribute('fill', 'darkgrey');
+                    const index = updatedOpponenttitans.indexOf(titanId);
+                    if (index !== -1) {
+                        updatedOpponenttitans.splice(index, 1);
+                    }
+                }
+            });
+
+            // Update the opponent's titan list
+            if (currentPlayer === 1) {
+                p2titans.length = 0;
+                p2titans.push(...updatedOpponenttitans);
+            } else {
+                p1titans.length = 0;
+                p1titans.push(...updatedOpponenttitans);
+            }
+
+            updateScores(); // Recalculate scores after removal
+        }
+
+        function endGameWithWinner(winner) {
+            clearInterval(timer1Interval);
+            clearInterval(timer2Interval);
+            clearInterval(clickTimerInterval);
+
+            const resultText = `Player ${winner} Wins!`;
+            document.getElementById('finalWinnerText').textContent = resultText;
+            document.getElementById('finalScoreText').textContent = `P1: ${score1} | P2: ${score2}`;
+            document.getElementById('gameOverScreen').style.display = 'flex';
+        }
+ 
+        function drawAlltitans() {
+            for (const [zone, group] of Object.entries(points)) {
+                group.forEach(([x, y]) => {
+                    titan(x, y, zone);
+                });
+            }
+
+            function mapAdjacency() {
+                // Define edges and their corresponding labels
+                const edgesWithLabels = [
+                    // Inner ring
+                    { pair: ['titan-0', 'titan-1'], label: 9 },
+                    { pair: ['titan-1', 'titan-2'], label: 8 },
+                    { pair: ['titan-2', 'titan-3'], label: 8 },
+                    { pair: ['titan-3', 'titan-4'], label: 9},
+                    { pair: ['titan-4', 'titan-5'], label: 8 },
+                    { pair: ['titan-5', 'titan-0'], label: 8},
+                    // Middle ring
+                    { pair: ['titan-6', 'titan-7'], label: 4 },
+                    { pair: ['titan-7', 'titan-8'], label: 5 },
+                    { pair: ['titan-8', 'titan-9'], label: 6 },
+                    { pair: ['titan-9', 'titan-10'], label: 4 },
+                    { pair: ['titan-10', 'titan-11'], label: 5 },
+                    { pair: ['titan-11', 'titan-6'], label: 6 },
+                    // Outer ring
+                    { pair: ['titan-12', 'titan-13'], label: 1 },
+                    { pair: ['titan-13', 'titan-14'], label: 2 },
+                    { pair: ['titan-14', 'titan-15'], label: 1 },
+                    { pair: ['titan-15', 'titan-16'], label: 1 },
+                    { pair: ['titan-16', 'titan-17'], label: 3 },
+                    { pair: ['titan-17', 'titan-12'], label: 2 },
+                    // Inner to Middle connectors
+                    { pair: ['titan-0', 'titan-6'], label: 1 },
+                    { pair: ['titan-2', 'titan-8'], label: 1 },
+                    { pair: ['titan-4', 'titan-10'], label: 1 },
+                    // Middle to Outer connectors
+                    { pair: ['titan-7', 'titan-13'], label: 1 },
+                    { pair: ['titan-9', 'titan-15'], label: 1 },
+                    { pair: ['titan-11', 'titan-17'], label: 1 }
+                ];
+
+                // Build the adjacency map
+                const alltitans = Array.from(svg.querySelectorAll('circle'));
+                alltitans.forEach(t1 => {
+                    const id1 = t1.id;
+                    titanAdjacency[id1] = [];
+
+                    edgesWithLabels.forEach(edge => {
+                        const [idA, idB] = edge.pair;
+                        if (id1 === idA) {
+                            titanAdjacency[id1].push({ neighborID: idB, label: edge.label });
+                        } else if (id1 === idB) {
+                            titanAdjacency[id1].push({ neighborID: idA, label: edge.label });
+                        }
+                    });
+                });
+            }
+
+            mapAdjacency(); // Call it after titans are drawn
+            titanDim();
+        }
+
+        drawAlltitans(); // Draw all titans when page loads
+
+        function endGame() {
+            clearInterval(timer1Interval);
+            clearInterval(timer2Interval);
+            clearInterval(clickTimerInterval);
+
+            let resultText = '';
+            if (score1 > score2) resultText = 'Player 1 Wins!';
+            else if (score2 > score1) resultText = 'Player 2 Wins!';
+            else resultText = "It's a Tie!";
+
+            document.getElementById('finalWinnerText').textContent = resultText;
+            document.getElementById('finalScoreText').textContent = `P1: ${score1} | P2: ${score2}`;
+            document.getElementById('gameOverScreen').style.display = 'flex';
+        }
+
+        // Optional: Example midpoint label
+        function aText(x1, y1, x2, y2, label) {
+            const midX = (x1 + x2) / 2;
+            const midY = (y1 + y2) / 2;
+
+            const dx = x2 - x1;
+            const dy = y2 - y1;
+
+            const length = Math.sqrt(dx * dx + dy * dy);
+            const offsetX = -dy / length;
+            const offsetY = dx / length;
+
+            const shiftAmount = 3; 
+            const textX = midX + offsetX * shiftAmount;
+            const textY = midY + offsetY * shiftAmount;
+
+            svg.insertAdjacentHTML('beforeend', `
+                <text x="${textX}" y="${textY}" font-size=".3rem">${label}</text>
+            `);
+        }
+
+        // Inner hexagon edges
+        aText(points.inner[0][0], points.inner[0][1], points.inner[1][0], points.inner[1][1], "9");
+        aText(points.inner[1][0], points.inner[1][1], points.inner[2][0], points.inner[2][1], "8");
+        aText(points.inner[2][0], points.inner[2][1], points.inner[3][0], points.inner[3][1], "8");
+        aText(points.inner[3][0], points.inner[3][1], points.inner[4][0], points.inner[4][1], "9");
+        aText(points.inner[4][0], points.inner[4][1], points.inner[5][0], points.inner[5][1], "8");
+        aText(points.inner[5][0], points.inner[5][1], points.inner[0][0], points.inner[0][1], "8");
+
+        // Middle hexagon edges
+        aText(points.middle[0][0], points.middle[0][1], points.middle[1][0], points.middle[1][1], "4");
+        aText(points.middle[1][0], points.middle[1][1], points.middle[2][0], points.middle[2][1], "5");
+        aText(points.middle[2][0], points.middle[2][1], points.middle[3][0], points.middle[3][1], "6");
+        aText(points.middle[3][0], points.middle[3][1], points.middle[4][0], points.middle[4][1], "4");
+        aText(points.middle[4][0], points.middle[4][1], points.middle[5][0], points.middle[5][1], "5");
+        aText(points.middle[5][0], points.middle[5][1], points.middle[0][0], points.middle[0][1], "6");
+
+        // Outer hexagon edges  
+        aText(points.outer[0][0], points.outer[0][1], points.outer[1][0], points.outer[1][1], "2");
+        aText(points.outer[1][0], points.outer[1][1], points.outer[2][0], points.outer[2][1], "1");
+        aText(points.outer[2][0], points.outer[2][1], points.outer[3][0], points.outer[3][1], "1");
+        aText(points.outer[3][0], points.outer[3][1], points.outer[4][0], points.outer[4][1], "3");
+        aText(points.outer[4][0], points.outer[4][1], points.outer[5][0], points.outer[5][1], "2");
+        aText(points.outer[5][0], points.outer[5][1], points.outer[0][0], points.outer[0][1], "1"); 
+
+        // Inner to Middle connections: Label only 3 non-consecutive edges with "1"
+        const inner_middle = [0, 2, 4];
+        for (const i of inner_middle) {
+            aText(points.inner[i][0], points.inner[i][1], points.middle[i][0], points.middle[i][1], "1");
+        }
+
+        // Middle to Outer connections: Label the other 3 non-consecutive edges with "1"
+        const middle_outer = [1, 3, 5];
+        for (const i of middle_outer) {
+            aText(points.middle[i][0], points.middle[i][1], points.outer[i][0], points.outer[i][1], "1");
+        } 
+
+        function updateScores() {
+            let counted = new Set();
+            score1 = 0;
+            score2 = 0; 
+
+            for (const id in titanAdjacency) {
+                const titan = document.getElementById(id);
+                const color = titan.getAttribute('fill');
+                if (color === 'darkgrey') continue;
+
+                for (const { neighborID, label } of titanAdjacency[id]) {
+                    const neighbor = document.getElementById(neighborID);
+                    if (neighbor && neighbor.getAttribute('fill') === color) {
+                        const pairKey = [id, neighborID].sort().join('-');
+                        if (!counted.has(pairKey)) {
+                            counted.add(pairKey);
+                            const points = label; // Use the label value as the score
+                            if (color === p1rgb) {
+                                score1 += points;
+                                console.log(`Player 1 scored ${points} for edge ${id} to ${neighborID}`);
+                            } else if (color === p2rgb) {
+                                score2 += points;
+                                console.log(`Player 2 scored ${points} for edge ${id} to ${neighborID}`);
+                            }
+                        }
+                    }
+                }
+            }
+
+            console.log(`Updated scores - Player 1: ${score1}, Player 2: ${score2}`);
+            document.getElementById('score1').textContent = score1;
+            document.getElementById('score2').textContent = score2;
+        }
+
+        // Menu Functionality
+        function setupMenuButtons() {
+            document.getElementById('resetButton').addEventListener('click', resetGame);
+            document.getElementById('pauseButton').addEventListener('click', pauseGame);
+            document.getElementById('resumeButton').addEventListener('click', resumeGame);
+            document.getElementById('startNewGameButton').addEventListener('click', resetGame);
+        }
+
+        function resetGame() {
+            // Clear all timers
+            clearInterval(timer1Interval);
+            clearInterval(timer2Interval);
+            clearInterval(clickTimerInterval);
+
+            // Reset game state
+            currentPlayer = 1;
+            p1Time = 90;
+            p2Time = 90;
+            clickTimeLeft = 10;
+            middleUnlockedOnce = false;
+            innerUnlockedOnce = false;
+            allowedZone = 'outer';
+            score1 = 0;
+            score2 = 0;
+            p1titans.length = 0;
+            p2titans.length = 0;
+            isPaused = false;
+            isMovementPhase = false;
+            selectedtitan = null;
+
+            // Reset timers display
+            document.getElementById('timer1').textContent = p1Time;
+            document.getElementById('timer2').textContent = p2Time;
+            document.getElementById('moveTimer').textContent = clickTimeLeft;
+            document.getElementById('score1').textContent = score1;
+            document.getElementById('score2').textContent = score2;
+
+            // Reset titans to darkgrey
+            const alltitans = svg.querySelectorAll('circle');
+            alltitans.forEach(titan => {
+                titan.setAttribute('fill', 'darkgrey');
+                titan.classList.remove('selected-titan');
+            });
+
+            // Hide game over screen if visible
+            document.getElementById('gameOverScreen').style.display = 'none';
+
+            // Remove paused styling
+            document.getElementById('hexSvg').classList.remove('paused');
+            document.getElementById('timers').classList.remove('paused');
+            document.getElementById('gameOverScreen').classList.remove('paused');
+
+            // Restart timers
+            startTimer(currentPlayer);
+            startClickTimer();
+            titanDim();
+        }
+
+        function pauseGame() {
+            if (!isPaused) { 
+                isPaused = true; 
+                // Apply paused styling to everything except menu buttons
+                document.getElementById('hexSvg').classList.add('paused');
+                document.getElementById('timers').classList.add('paused');
+                document.getElementById('gameOverScreen').classList.add('paused');
+            }
+        }
+
+        function resumeGame() {
+            if (isPaused) {
+                isPaused = false;
+                // Remove paused styling
+                document.getElementById('hexSvg').classList.remove('paused');
+                document.getElementById('timers').classList.remove('paused');
+                document.getElementById('gameOverScreen').classList.remove('paused');
+            }
+        }
+    </script> 
+</body>
+</html>
