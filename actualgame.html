@@ -367,14 +367,14 @@
                 }
             });
         }
-        function checkIfAllFilled(zone) {
+        function checkifallfilled(zone) {
             const zonetitans = Array.from(svg.querySelectorAll(`circle[data-zone="${zone}"]`));
             return zonetitans.every(t => t.getAttribute('fill') !== 'darkgrey');
         }
 
         function updateZone() {
-            const outerFilled = checkIfAllFilled('outer');
-            const middleFilled = checkIfAllFilled('middle');
+            const outerFilled = checkifallfilled('outer');
+            const middleFilled = checkifallfilled('middle');
 
             // Once unlocked, remain unlocked
             if (outerFilled && !middleUnlockedOnce) {
@@ -391,8 +391,8 @@
             } else {
                 allowedZone = 'outer'; // Only outer
             }
-            // End game when all inner titans are placed
-            if (checkIfAllFilled('inner')) {
+            
+            if (checkifallfilled('inner')) {
                 clearInterval(timer1Interval);
                 clearInterval(timer2Interval);
                 clearInterval(clickTimerInterval);
@@ -420,13 +420,13 @@
                 const currentColor = titan.getAttribute('fill');
                 const titanZone = titan.getAttribute('data-zone');
 
-                // Check if the titan is in an allowed zone
+                // titan allowed only in particular zone checking
                 if (
                     (allowedZone === 'outer' && titanZone !== 'outer') ||
                     (allowedZone === 'middle' && !['outer', 'middle'].includes(titanZone)) ||
                     (allowedZone === 'inner' && !['outer', 'middle', 'inner'].includes(titanZone))
                 ) { 
-                    return; // Click ignored silently
+                    return; //for ignoring click...mostly bug free
                 }
 
                 let playertitans = currentPlayer === 1 ? p1titans : p2titans;
@@ -449,7 +449,7 @@
                         console.log("All titans placed. Entering movement phase.");
                     }
                 } else {
-                    // Movement phase
+                    // movement of titan
                     if (selectedtitan) {
                         // A titan is already selected, try to move it to this node
                         const selectedtitanElement = document.getElementById(selectedtitan);
@@ -462,32 +462,30 @@
                             return;
                         }
 
-                        // Check if the target node is adjacent to the selected titan
+                        // only allowed to move to adjacent circles
                         const isAdjacent = titanAdjacency[selectedtitan].some(neighbor => neighbor.neighborID === titanId);
                         if (!isAdjacent) {
                             alert("You can only move to an adjacent node!");
                             return;
                         }
 
-                        // Move the titan
+                        // changing the titans so that previous left position is clickable again
                         selectedtitanElement.setAttribute('fill', 'darkgrey');
                         titan.setAttribute('fill', selectedtitanColor);
-                        console.log(`Player ${currentPlayer} moved titan from ${selectedtitan} to ${titanId}`);
+                        console.log(`Player ${currentPlayer} moved titan from ${selectedtitan} to ${titanId}`); //for history
 
-                        // Update the player's titan list
+                        // Update the player's score
                         const index = playertitans.indexOf(selectedtitan);
                         if (index !== -1) {
                             playertitans[index] = titanId;
                         }
 
-                        // Deselect the titan
+                        // deselect it
                         selectedtitanElement.classList.remove('selected-titan');
                         selectedtitan = null;
-
-                        // Check for surrounded titans and remove them
                         checkAndRemoveSurroundedtitans();
 
-                        // Check if a player has no titans left
+                        // if titans of player==0 other player wins
                         if (p1titans.length === 0) {
                             endGameWithWinner(2);
                             return;
@@ -496,7 +494,7 @@
                             return;
                         }
                     } else {
-                        // No titan selected, check if this is the current player's titan
+                        // whose titans check wit player color
                         if (currentColor !== playerColor) {
                             alert("Select your own titan to move!");
                             return;
@@ -514,7 +512,7 @@
                 updateZone();
 
                 // Game End Check
-                if (!isMovementPhase && checkIfAllFilled('inner')) {
+                if (!isMovementPhase && checkifallfilled('inner')) {
                     endGame();
                     return;
                 }
